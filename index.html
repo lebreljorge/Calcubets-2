@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora Combinada con Notas Rápidas</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            touch-action: manipulation;
+        }
+        h1 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        h3 {
+            font-size: 18px;
+            color: #333;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        .excel-table {
+            border-collapse: collapse;
+            width: 100%;
+            max-width: 600px;
+            background-color: #fff;
+            border: 1px solid #000;
+            margin-bottom: 20px;
+        }
+        .excel-table th, .excel-table td {
+            border: 1px solid #000;
+            padding: 8px;
+            text-align: center;
+            font-size: 14px;
+        }
+        .excel-table th {
+            background-color: #d3d3d3;
+            color: #000;
+            font-weight: bold;
+        }
+        .excel-table td {
+            background-color: #fff;
+        }
+        .excel-table input {
+            width: 100%;
+            border: none;
+            padding: 5px;
+            text-align: center;
+            font-size: 14px;
+            background-color: transparent;
+            -webkit-appearance: none;
+        }
+        .excel-table input:focus {
+            outline: none;
+            background-color: #f0f0f0;
+        }
+        .excel-table .calculated {
+            background-color: #e6e6e6;
+        }
+        .excel-table .error {
+            color: #ff0000;
+        }
+        .excel-table .high-value {
+            background-color: #90ee90;
+        }
+        .event-calculator {
+            border: 1px solid #000;
+            background-color: #fff;
+            padding: 10px;
+            width: 100%;
+            max-width: 500px;
+            margin-bottom: 20px;
+        }
+        .event-calculator h2 {
+            background-color: #d3d3d3;
+            color: #000;
+            font-size: 16px;
+            margin: 0 0 10px 0;
+            padding: 8px;
+            text-align: center;
+            border: 1px solid #000;
+            border-bottom: none;
+        }
+        .event-calculator label {
+            display: block;
+            font-size: 14px;
+            color: #000;
+            margin: 5px 0 2px;
+            text-align: left;
+            font-weight: normal;
+        }
+        .event-calculator input, .event-calculator select {
+            width: 100%;
+            padding: 5px;
+            margin-bottom: 5px;
+            border: 1px solid #000;
+            border-radius: 0;
+            font-size: 14px;
+            background-color: #fff;
+            box-sizing: border-box;
+            text-align: center;
+            -webkit-appearance: none;
+        }
+        .event-calculator button {
+            width: 100%;
+            padding: 8px;
+            background-color: #d3d3d3;
+            color: #000;
+            border: 1px solid #000;
+            border-radius: 0;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 5px;
+            touch-action: manipulation;
+        }
+        .event-calculator button:hover {
+            background-color: #c0c0c0;
+        }
+        .event-calculator .result {
+            margin-top: 10px;
+            padding: 8px;
+            background-color: #fff;
+            border: 1px solid #000;
+            font-size: 14px;
+            color: #000;
+            text-align: center;
+            min-height: 20px;
+        }
+        .event-calculator .result.error {
+            color: #ff0000;
+        }
+        .event-section {
+            border-top: 1px solid #ccc;
+            padding-top: 10px;
+            margin-top: 10px;
+        }
+        .notes-section {
+            width: 100%;
+            max-width: 600px;
+            background-color: #fff;
+            border: 1px solid #000;
+            padding: 10px;
+        }
+        .notes-section h3 {
+            background-color: #d3d3d3;
+            color: #000;
+            font-size: 16px;
+            margin: 0 0 10px 0;
+            padding: 8px;
+            text-align: center;
+            border: 1px solid #000;
+            border-bottom: none;
+        }
+        .notes-section textarea {
+            width: 100%;
+            height: 100px;
+            padding: 5px;
+            border: 1px solid #000;
+            border-radius: 0;
+            font-size: 14px;
+            background-color: #fff;
+            box-sizing: border-box;
+            resize: vertical;
+            -webkit-appearance: none;
+        }
+        .error-message {
+            color: #ff0000;
+            font-size: 14px;
+            text-align: center;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .debug-message {
+            color: #008000;
+            font-size: 14px;
+            text-align: center;
+            margin-bottom: 20px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="error-message" id="errorMessage"></div>
+    <div class="debug-message" id="debugMessage"></div>
+    <h1>Calculadora Combinada con Notas Rápidas</h1>
+
+    <!-- Calculadora Estilo Excel (Apuestas) -->
+    <table class="excel-table">
+        <thead>
+            <tr>
+                <th>Cuota</th>
+                <th>% Según Casa</th>
+                <th>% Probabilidad estimada por mí</th>
+                <th>Cuota Justa</th>
+                <th>Valor Esperado</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><input type="number" id="cuota1" step="0.01" placeholder="Ej: 1.8" oninput="handleInputEvent(1, 'cuota1')" onchange="handleInputEvent(1, 'cuota1')"></td>
+                <td class="calculated" id="percentCasa1">-</td>
+                <td><input type="number" id="percentYo1" step="0.01" placeholder="Ej: 65" oninput="handleInputEvent(1, 'percentYo1')" onchange="handleInputEvent(1, 'percentYo1')"></td>
+                <td class="calculated" id="cuotaJusta1">-</td>
+                <td class="calculated" id="valorEsperado1">-</td>
+            </tr>
+            <tr>
+                <td><input type="number" id="cuota2" step="0.01" placeholder="Ej: 1.8" oninput="handleInputEvent(2, 'cuota2')" onchange="handleInputEvent(2, 'cuota2')"></td>
+                <td class="calculated" id="percentCasa2">-</td>
+                <td><input type="number" id="percentYo2" step="0.01" placeholder="Ej: 65" oninput="handleInputEvent(2, 'percentYo2')" onchange="handleInputEvent(2, 'percentYo2')"></td>
+                <td class="calculated" id="cuotaJusta2">-</td>
+                <td class="calculated" id="valorEsperado2">-</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- Calculadora de Probabilidades de Eventos -->
+    <div class="event-calculator">
+        <h2>Calculadora de Probabilidades de Eventos</h2>
+        <label for="homeTeam">Equipo local:</label>
+        <input type="text" id="homeTeam" placeholder="Ej: Inter de Milán" required>
+        <label for="awayTeam">Equipo visitante:</label>
+        <input type="text" id="awayTeam" placeholder="Ej: AC Milan" required>
+
+        <!-- Primer Evento -->
+        <div class="event-section">
+            <h3>Evento 1</h3>
+            <label for="eventType1">Tipo de evento:</label>
+            <select id="eventType1" onchange="updateEventFields(1)">
+                <option value="teamShots">Remates (Equipo)</option>
+                <option value="teamShotsOnTarget">Remates a Puerta (Equipo)</option>
+                <option value="corners">Córners</option>
+                <option value="fouls">Faltas</option>
+                <option value="teamGoals">Goles del Equipo</option>
+                <option value="playerShots">Remates de un Jugador</option>
+                <option value="playerShotsOnTarget">Remates a Puerta de un Jugador</option>
+                <option value="goalkeeperSaves">Paradas del Portero</option>
+            </select>
+            <label for="eventName1">Evento a calcular:</label>
+            <input type="text" id="eventName1" placeholder="Ej: Remates de Inter" required>
+            <label for="baseLambda1">Promedio base del evento (sin ajustes):</label>
+            <input type="number" id="baseLambda1" step="0.01" placeholder="Ej: 12" required>
+            <label for="opponentAdjustment1">Ajuste por rival (%):</label>
+            <input type="number" id="opponentAdjustment1" placeholder="Ej: 10 para +10%" step="0.01" required>
+            <label for="homeAdvantage1">Ajuste por ventaja de local (%):</label>
+            <input type="number" id="homeAdvantage1" placeholder="Ej: 10 para +10%" step="0.01" value="0">
+            <label for="contextAdjustment1">Ajuste por contexto (ej: derbi, lesiones) (%):</label>
+            <input type="number" id="contextAdjustment1" placeholder="Ej: -5 para -5%" step="0.01" value="0">
+            <label for="threshold1">Valor umbral:</label>
+            <input type="number" id="threshold1" placeholder="Ej: 10" step="1" required>
+            <label for="comparison1">Tipo de comparación:</label>
+            <select id="comparison1">
+                <option value="greater">Más de</option>
+                <option value="equal">Exactamente</option>
+                <option value="less">Menos de</option>
+                <option value="atLeast">Al menos</option>
+            </select>
+        </div>
+
+        <!-- Segundo Evento -->
+        <div class="event-section">
+            <h3>Evento 2 (opcional para probabilidad combinada)</h3>
+            <label for="eventType2">Tipo de evento:</label>
+            <select id="eventType2" onchange="updateEventFields(2)">
+                <option value="teamShots">Remates (Equipo)</option>
+                <option value="teamShotsOnTarget">Remates a Puerta (Equipo)</option>
+                <option value="corners">Córners</option>
+                <option value="fouls">Faltas</option>
+                <option value="teamGoals">Goles del Equipo</option>
+                <option value="playerShots">Remates de un Jugador</option>
+                <option value="playerShotsOnTarget">Remates a Puerta de un Jugador</option>
+                <option value="goalkeeperSaves">Paradas del Portero</option>
+            </select>
+            <label for="eventName2">Evento a calcular:</label>
+            <input type="text" id="eventName2" placeholder="Ej: Remates de Lautaro Martínez">
+            <label for="baseLambda2">Promedio base del evento (sin ajustes):</label>
+            <input type="number" id="baseLambda2" step="0.01" placeholder="Ej: 3">
+            <label for="opponentAdjustment2">Ajuste por rival (%):</label>
+            <input type="number" id="opponentAdjustment2" placeholder="Ej: 10 para +10%" step="0.01">
+            <label for="homeAdvantage2">Ajuste por ventaja de local (%):</label>
+            <input type="number" id="homeAdvantage2" placeholder="Ej: 10 para +10%" step="0.01" value="0">
+            <label for="contextAdjustment2">Ajuste por contexto (ej: derbi, lesiones) (%):</label>
+            <input type="number" id="contextAdjustment2" placeholder="Ej: -5 para -5%" step="0.01" value="0">
+            <label for="threshold2">Valor umbral:</label>
+            <input type="number" id="threshold2" placeholder="Ej: 1" step="1">
+            <label for="comparison2">Tipo de comparación:</label>
+            <select id="comparison2">
+                <option value="greater">Más de</option>
+                <option value="equal">Exactamente</option>
+                <option value="less">Menos de</option>
+                <option value="atLeast">Al menos</option>
+            </select>
+        </div>
+
+        <button onclick="handleButtonClick(1)">Calcular Evento 1 y Usar en Fila 1</button>
+        <button onclick="handleButtonClick(2)">Calcular Ambos Eventos y Usar Combinada en Fila 2</button>
+        <div class="result" id="result"></div>
+    </div>
+
+    <!-- Sección de Notas Rápidas -->
+    <div class="notes-section">
+        <h3>Notas Rápidas</h3>
+        <textarea id="quickNotes" placeholder="Escribe tus notas aquí... (se guardan automáticamente)"></textarea>
+    </div>
+
+    <script>
+        let lastProbability1 = 0;
+        let lastProbability2 = 0;
+        const errorMessageDiv = document.getElementById('errorMessage');
+        const debugMessageDiv = document.getElementById('debugMessage');
+
+        // Alerta inicial para confirmar que el JavaScript se está ejecutando
+        alert("¡JavaScript cargado! Si ves esta alerta, el código está funcionando. Usa el servidor local para evitar problemas en el móvil.");
+
+        function showError(message) {
+            errorMessageDiv.textContent = message;
+            errorMessageDiv.style.display = 'block';
+        }
+
+        function showDebug(message) {
+            debugMessageDiv.textContent = message;
+            debugMessageDiv.style.display = 'block';
+        }
+
+        function handleInputEvent(row, field) {
+            showDebug(`Evento disparado: ${field} en fila ${row}`);
+            calculateRow(row);
+        }
+
+        function handleButtonClick(targetRow) {
+            showDebug(`Botón clicado: Calcular para fila ${targetRow}`);
+            calculateEventProbability(targetRow);
+        }
+
+        function calculateRow(row) {
+            try {
+                const cuotaInput = document.getElementById(`cuota${row}`);
+                const percentCasaCell = document.getElementById(`percentCasa${row}`);
+                const percentYoInput = document.getElementById(`percentYo${row}`);
+                const cuotaJustaCell = document.getElementById(`cuotaJusta${row}`);
+                const valorEsperadoCell = document.getElementById(`valorEsperado${row}`);
+
+                const cuota = parseFloat(cuotaInput.value);
+                const percentYo = parseFloat(percentYoInput.value);
+
+                percentCasaCell.className = 'calculated';
+                cuotaJustaCell.className = 'calculated';
+                valorEsperadoCell.className = 'calculated';
+
+                if (isNaN(cuota) || cuota <= 1) {
+                    percentCasaCell.textContent = '#DIV/0!';
+                    percentCasaCell.className = 'calculated error';
+                    cuotaJustaCell.textContent = '#DIV/0!';
+                    cuotaJustaCell.className = 'calculated error';
+                    valorEsperadoCell.textContent = '#DIV/0!';
+                    valorEsperadoCell.className = 'calculated error';
+                    return;
+                }
+
+                if (isNaN(percentYo) || percentYo <= 0 || percentYo > 100) {
+                    percentCasaCell.textContent = '#DIV/0!';
+                    percentCasaCell.className = 'calculated error';
+                    cuotaJustaCell.textContent = '#DIV/0!';
+                    cuotaJustaCell.className = 'calculated error';
+                    valorEsperadoCell.textContent = '#DIV/0!';
+                    valorEsperadoCell.className = 'calculated error';
+                    return;
+                }
+
+                const percentCasa = (1 / cuota) * 100;
+                percentCasaCell.textContent = percentCasa.toFixed(2);
+
+                const probabilidad = percentYo / 100;
+                const cuotaJusta = 1 / probabilidad;
+                cuotaJustaCell.textContent = cuotaJusta.toFixed(2);
+
+                const valorEsperado = (probabilidad * cuota) - 1;
+                valorEsperadoCell.textContent = valorEsperado.toFixed(2);
+
+                if (valorEsperado >= 0.10) {
+                    valorEsperadoCell.className = 'calculated high-value';
+                } else if (valorEsperado < 0) {
+                    valorEsperadoCell.className = 'calculated error';
+                }
+            } catch (e) {
+                showError('Error en la calculadora de cuotas: ' + e.message);
+            }
+        }
+
+        function factorial(n) {
+            if (n === 0 || n === 1) return 1;
+            return n * factorial(n - 1);
+        }
+
+        function poissonProbability(lambda, k) {
+            return (Math.exp(-lambda) * Math.pow(lambda, k)) / factorial(k);
+        }
+
+        function updateEventFields(eventNum) {
+            try {
+                const eventType = document.getElementById(`eventType${eventNum}`).value;
+                const eventNameInput = document.getElementById(`eventName${eventNum}`);
+                const baseLambdaInput = document.getElementById(`baseLambda${eventNum}`);
+
+                switch (eventType) {
+                    case 'teamShots':
+                        eventNameInput.placeholder = 'Ej: Remates de Inter';
+                        baseLambdaInput.placeholder = 'Ej: 12';
+                        break;
+                    case 'teamShotsOnTarget':
+                        eventNameInput.placeholder = 'Ej: Remates a Puerta de Inter';
+                        baseLambdaInput.placeholder = 'Ej: 4';
+                        break;
+                    case 'corners':
+                        eventNameInput.placeholder = 'Ej: Córners de Inter';
+                        baseLambdaInput.placeholder = 'Ej: 5';
+                        break;
+                    case 'fouls':
+                        eventNameInput.placeholder = 'Ej: Faltas de Inter';
+                        baseLambdaInput.placeholder = 'Ej: 10';
+                        break;
+                    case 'teamGoals':
+                        eventNameInput.placeholder = 'Ej: Goles de Inter';
+                        baseLambdaInput.placeholder = 'Ej: 1.5';
+                        break;
+                    case 'playerShots':
+                        eventNameInput.placeholder = 'Ej: Remates de Lautaro Martínez';
+                        baseLambdaInput.placeholder = 'Ej: 3';
+                        break;
+                    case 'playerShotsOnTarget':
+                        eventNameInput.placeholder = 'Ej: Remates a Puerta de Lautaro Martínez';
+                        baseLambdaInput.placeholder = 'Ej: 1.5';
+                        break;
+                    case 'goalkeeperSaves':
+                        eventNameInput.placeholder = 'Ej: Paradas de Donnarumma';
+                        baseLambdaInput.placeholder = 'Ej: 3';
+                        break;
+                }
+            } catch (e) {
+                showError('Error al actualizar campos: ' + e.message);
+            }
+        }
+
+        function calculateSingleEvent(eventNum, targetRow) {
+            try {
+                const homeTeam = document.getElementById('homeTeam').value;
+                const awayTeam = document.getElementById('awayTeam').value;
+                const eventName = document.getElementById(`eventName${eventNum}`).value;
+                const baseLambda = parseFloat(document.getElementById(`baseLambda${eventNum}`).value);
+                const opponentAdjustment = parseFloat(document.getElementById(`opponentAdjustment${eventNum}`).value) / 100;
+                const homeAdvantage = parseFloat(document.getElementById(`homeAdvantage${eventNum}`).value) / 100;
+                const contextAdjustment = parseFloat(document.getElementById(`contextAdjustment${eventNum}`).value) / 100;
+                const threshold = parseInt(document.getElementById(`threshold${eventNum}`).value);
+                const comparison = document.getElementById(`comparison${eventNum}`).value;
+
+                if (!homeTeam || !awayTeam || !eventName || isNaN(baseLambda) || baseLambda < 0 || isNaN(threshold) || threshold < 0 || isNaN(opponentAdjustment)) {
+                    return { error: true, message: `Por favor, ingresa valores válidos para el Evento ${eventNum}.` };
+                }
+
+                let adjustedLambda = baseLambda;
+                adjustedLambda *= (1 + opponentAdjustment);
+                adjustedLambda *= (1 + homeAdvantage);
+                adjustedLambda *= (1 + contextAdjustment);
+
+                let probability = 0;
+                if (comparison === 'equal') {
+                    probability = poissonProbability(adjustedLambda, threshold);
+                } else if (comparison === 'greater') {
+                    let cumulativeProb = 0;
+                    for (let k = 0; k <= threshold; k++) {
+                        cumulativeProb += poissonProbability(adjustedLambda, k);
+                    }
+                    probability = 1 - cumulativeProb;
+                } else if (comparison === 'less') {
+                    let cumulativeProb = 0;
+                    for (let k = 0; k < threshold; k++) {
+                        cumulativeProb += poissonProbability(adjustedLambda, k);
+                    }
+                    probability = cumulativeProb;
+                } else if (comparison === 'atLeast') {
+                    probability = 1 - poissonProbability(adjustedLambda, 0);
+                }
+
+                const probabilityPercent = (probability * 100).toFixed(2);
+                let comparisonText = '';
+                if (comparison === 'greater') comparisonText = `más de ${threshold}`;
+                else if (comparison === 'less') comparisonText = `menos de ${threshold}`;
+                else if (comparison === 'equal') comparisonText = `exactamente ${threshold}`;
+                else if (comparison === 'atLeast') comparisonText = `al menos 1`;
+
+                return {
+                    error: false,
+                    probability: probabilityPercent,
+                    message: `Probabilidad de ${eventName} en ${homeTeam} vs ${awayTeam} (${comparisonText}): ${probabilityPercent}% (λ ajustado: ${adjustedLambda.toFixed(2)})`
+                };
+            } catch (e) {
+                showError('Error al calcular el evento: ' + e.message);
+                return { error: true, message: 'Error al calcular el evento.' };
+            }
+        }
+
+        function calculateEventProbability(targetRow) {
+            try {
+                const resultDiv = document.getElementById('result');
+                resultDiv.className = 'result';
+
+                const event1Result = calculateSingleEvent(1, targetRow);
+                if (event1Result.error) {
+                    resultDiv.textContent = event1Result.message;
+                    resultDiv.className = 'result error';
+                    return;
+                }
+                lastProbability1 = parseFloat(event1Result.probability);
+
+                if (targetRow === 1) {
+                    resultDiv.textContent = event1Result.message;
+
+                    const percentYoInput = document.getElementById(`percentYo${targetRow}`);
+                    percentYoInput.value = event1Result.probability;
+                    calculateRow(targetRow);
+                    return;
+                }
+
+                const eventName2 = document.getElementById('eventName2').value;
+                const baseLambda2 = document.getElementById('baseLambda2').value;
+                const opponentAdjustment2 = document.getElementById('opponentAdjustment2').value;
+                const threshold2 = document.getElementById('threshold2').value;
+
+                if (!eventName2 || !baseLambda2 || !opponentAdjustment2 || !threshold2) {
+                    resultDiv.textContent = 'Por favor, completa los datos del Evento 2 para calcular la probabilidad combinada.';
+                    resultDiv.className = 'result error';
+                    return;
+                }
+
+                const event2Result = calculateSingleEvent(2, targetRow);
+                if (event2Result.error) {
+                    resultDiv.textContent = event2Result.message;
+                    resultDiv.className = 'result error';
+                    return;
+                }
+                lastProbability2 = parseFloat(event2Result.probability);
+
+                const combinedProbability = (lastProbability1 / 100) * (lastProbability2 / 100) * 100;
+                const combinedMessage = `${event1Result.message}\n${event2Result.message}\nProbabilidad Combinada: ${combinedProbability.toFixed(2)}%`;
+
+                resultDiv.textContent = combinedMessage;
+
+                const percentYoInput = document.getElementById('percentYo2');
+                percentYoInput.value = combinedProbability.toFixed(2);
+                calculateRow(2);
+            } catch (e) {
+                showError('Error al calcular la probabilidad: ' + e.message);
+            }
+        }
+
+        // Manejo de Notas Rápidas (con fallback si localStorage falla)
+        const quickNotes = document.getElementById('quickNotes');
+        let notesAvailable = true;
+
+        try {
+            if (typeof(Storage) !== "undefined" && localStorage) {
+                quickNotes.value = localStorage.getItem('quickNotes') || '';
+            } else {
+                throw new Error('localStorage no está disponible');
+            }
+        } catch (e) {
+            showError('No se pudo acceder a localStorage para las notas: ' + e.message + '. Las notas no se guardarán.');
+            quickNotes.value = '';
+            notesAvailable = false;
+        }
+
+        quickNotes.addEventListener('input', function() {
+            if (notesAvailable) {
+                try {
+                    localStorage.setItem('quickNotes', quickNotes.value);
+                } catch (e) {
+                    showError('No se pudo guardar las notas en localStorage: ' + e.message + '. Las notas no se guardarán.');
+                    notesAvailable = false;
+                }
+            }
+        });
+
+        window.onload = function() {
+            try {
+                showDebug('Página cargada correctamente.');
+                updateEventFields(1);
+                updateEventFields(2);
+            } catch (e) {
+                showError('Error al inicializar la página: ' + e.message);
+            }
+        };
+    </script>
+</body>
